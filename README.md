@@ -9,7 +9,7 @@ A [Paint.NET](http://www.getpaint.net) filetype plugin that loads and saves JPEG
   Paint.NET Version |  FileTypes Folder Location
   --------|----------
   Classic | C:\Program Files\Paint.NET\FileTypes    
-  Microsoft Store | My Documents\paint.net App Files\FileTypes
+  Microsoft Store | Documents\paint.net App Files\FileTypes
   
 3. Restart Paint.NET.
 
