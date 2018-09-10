@@ -311,7 +311,7 @@ jp2_resc_t *resc;
 			goto error;
 		}
 
-		box->len = 12 + JP2_BOX_HDRLEN(false);
+		box->len = JP2_BOX_HDRLEN(true) + sizeof(jp2_resc_t);
 
 		if (jp2_box_put(box, tmpstream)) {
 			goto error;
