@@ -81,7 +81,7 @@ namespace Jpeg2000Filetype
 
 			[DllImport("Jpeg2000IO_x86.dll", CallingConvention = CallingConvention.StdCall)]
 			internal static extern CodecError EncodeFile(
-				IntPtr inData, 
+				IntPtr inData,
 				int width,
 				int height,
 				int stride,
@@ -92,7 +92,7 @@ namespace Jpeg2000Filetype
 			[DllImport("Jpeg2000IO_x86.dll", CallingConvention = CallingConvention.StdCall)]
 			internal static extern void FreeImageData(ref ImageData data);
 		}
-		
+
 		[SuppressUnmanagedCodeSecurity]
 		private static class IO_x64
 		{

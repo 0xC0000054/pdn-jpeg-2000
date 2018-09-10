@@ -26,12 +26,12 @@ namespace Jpeg2000Filetype
 		internal static string StaticName
 		{
 			get
-			{ 
+			{
 				return "Jpeg 2000";
 			}
 		}
 
-		public Jpeg2000Filetype() : 
+		public Jpeg2000Filetype() :
 			base(StaticName, FileTypeFlags.SupportsLoading | FileTypeFlags.SupportsSaving, new string[] {".jp2", ".j2c", ".jpg2", ".jpf"})
 		{
 		}
@@ -40,10 +40,10 @@ namespace Jpeg2000Filetype
 		{
 			return new FileType[] { new Jpeg2000Filetype() };
 		}
-		
+
 		protected unsafe override Document OnLoad(Stream input)
 		{
-			
+
 			FileIO.ImageData image;
 
 			FileIO.CodecError result = FileIO.DecodeFile(input, out image);
@@ -84,7 +84,7 @@ namespace Jpeg2000Filetype
 							p++;
 							src += image.channels;
 						}
-					} 
+					}
 				}
 				else
 				{
@@ -102,12 +102,12 @@ namespace Jpeg2000Filetype
 								p->A = src[1];
 							}
 
-							p++;							
+							p++;
 							src += image.channels;
 						}
-					} 
+					}
 				}
-				
+
 				if (image.dpcmX > 0.0 && image.dpcmY > 0.0)
 				{
 					doc.DpuUnit = MeasurementUnit.Centimeter;
@@ -192,7 +192,7 @@ namespace Jpeg2000Filetype
 					{
 						return 4;
 					}
-					
+
 					if (!uniqueColors.Contains(*srcPtr) && uniqueColors.Count < 300)
 					{
 						uniqueColors.Add(*srcPtr);
@@ -202,7 +202,7 @@ namespace Jpeg2000Filetype
 				}
 			}
 
-			
+
 			if (uniqueColors.Count <= 256)
 			{
 				for (int y = 0; y < height; y++)
@@ -212,13 +212,13 @@ namespace Jpeg2000Filetype
 
 					while (srcPtr < endPtr)
 					{
-					   
+
 						if (!(srcPtr->B == srcPtr->G && srcPtr->G == srcPtr->R))
 						{
 							// The image is RGB.
 							return 3;
 						}
-						
+
 
 						++srcPtr;
 					}
@@ -233,7 +233,7 @@ namespace Jpeg2000Filetype
 		protected override void OnSaveT(Document input, Stream output, PropertyBasedSaveConfigToken token, Surface scratchSurface, ProgressEventHandler progressCallback)
 		{
 			int quality = (int)token.GetProperty(PropertyNames.Quality).Value;
-			
+
 			FileIO.EncodeParams parameters = new FileIO.EncodeParams();
 			parameters.quality = quality;
 
@@ -252,7 +252,7 @@ namespace Jpeg2000Filetype
 					parameters.dpcmY = Document.DefaultDpcm;
 					break;
 			}
-		  
+
 			using (RenderArgs ra = new RenderArgs(scratchSurface))
 			{
 				input.Render(ra, true);
@@ -262,9 +262,9 @@ namespace Jpeg2000Filetype
 				scratchSurface.Scan0.Pointer,
 				scratchSurface.Width,
 				scratchSurface.Height,
-				scratchSurface.Stride, 
-				CountChannels(scratchSurface), 
-				parameters, 
+				scratchSurface.Stride,
+				CountChannels(scratchSurface),
+				parameters,
 				output);
 		}
 	}

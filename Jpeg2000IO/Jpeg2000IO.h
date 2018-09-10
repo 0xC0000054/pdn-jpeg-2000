@@ -31,7 +31,7 @@ struct IOCallbacks
 	SeekFn Seek;
 };
 
-struct ImageData 
+struct ImageData
 {
 	int width;
 	int height;
@@ -56,8 +56,8 @@ struct EncodeParams
 #define errDecodeFailure -3
 #define errTooManyComponents -4
 #define errProfileCreation -5
-#define errProfileConversion -6 
-#define errImageBufferWrite -7 
+#define errProfileConversion -6
+#define errImageBufferWrite -7
 #define errEncodeFailed -8
 
 JPEG2000IO_API int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output);

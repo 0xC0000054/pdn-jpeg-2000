@@ -47,11 +47,11 @@ namespace
 int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 {
 	jas_image_t* image = nullptr;
-	jas_matrix_t** bufs = nullptr; 
+	jas_matrix_t** bufs = nullptr;
 	int i, x, y;
 
 	int err = errOk;
-	
+
 	if (jas_init())
 		return errInitFailure;
 
@@ -66,7 +66,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		{
 			throw((int)errUnknownFormat);
 		}
-	
+
 		jas_image_fmtinfo_t* info = jas_image_lookupfmtbyid(format);
 		if (!info)
 		{
@@ -86,7 +86,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		{
 			jas_stream_rewind(in);
 			bool done = false;
-		
+
 			jp2_box_t *box = nullptr;
 
 			while(box = jp2_box_get(in))
@@ -127,7 +127,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		/* Create a color profile if needed. */
 		if (!jas_clrspc_isunknown(image->clrspc_) &&
 		    !jas_clrspc_isgeneric(image->clrspc_) &&
-			!image->cmprof_) 
+			!image->cmprof_)
 		{
 			image->cmprof_ = jas_cmprof_createfromclrspc(jas_image_clrspc(image));
 			if (!image->cmprof_)
@@ -144,7 +144,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		{
 			throw((int)errTooManyComponents);
 		}
-	
+
 		output->width = width;
 		output->height = height;
 
@@ -156,7 +156,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 			{
 				throw((int)errProfileCreation);
 			}
-			
+
 			jas_image_t* newimage = jas_image_chclrspc(image, outprof, JAS_CMXFORM_INTENT_PER);
 			if (!newimage)
 			{
@@ -168,7 +168,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 			image = newimage;
 		}
 
-		output->channels = image->numcmpts_;		
+		output->channels = image->numcmpts_;
 
 		bufs = reinterpret_cast<jas_matrix_t**>(calloc(image->numcmpts_, sizeof(jas_matrix_t**)));
 		if (!bufs)
@@ -196,11 +196,11 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		const bool hasAlpha = alphaIndex >= 0;
 
 		output->hasAlpha = hasAlpha;
-		
+
 		switch (jas_clrspc_fam(image->clrspc_))
 		{
 			case JAS_CLRSPC_FAM_RGB:
-				
+
 				bpp = hasAlpha ? 4 : 3;
 
 				stride = width * bpp;
@@ -244,7 +244,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 
 				break;
 			case JAS_CLRSPC_FAM_GRAY:
-			
+
 				bpp = hasAlpha ? 2 : 1;
 
 				stride = width * bpp;
@@ -255,7 +255,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 				{
 					throw((int)errOutOfMemory);
 				}
-				
+
 				width = jas_image_cmptwidth(image, 0);
 				height = jas_image_cmptheight(image, 0);
 				depth = jas_image_cmptprec(image, 0);
@@ -264,12 +264,12 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 
 				for (y = 0; y < height; y++) {
 					jas_image_readcmpt(image, index0, 0, y, width, 1, bufs[0]);
-					
+
 					if (hasAlpha)
 					{
 						jas_image_readcmpt(image, alphaIndex, 0, y, width, 1, bufs[1]);
 					}
-			
+
 					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * width);
 					for (x = 0; x < width; x++){
 						data[0] = static_cast<BYTE>((jas_matrix_getv(bufs[0], x)>>shift));
@@ -278,11 +278,11 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 						{
 							data[1] = static_cast<BYTE>((jas_matrix_getv(bufs[1], x)>>shift));
 						}
-						
+
 						data++;
 					}
 				}
-				
+
 				break;
 			default:
 				err = errUnknownFormat;
@@ -326,10 +326,10 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 	jas_stream_t* out = nullptr;
 	jas_matrix_t* cmpts[4] = { nullptr, nullptr, nullptr, nullptr };
 	jas_image_cmptparm_t cmptparms[4];
-	int i, x, y; 
+	int i, x, y;
 
 	int format = 0, error = errOk;
-	
+
 
 	if (jas_init())
 		return errInitFailure;
@@ -339,14 +339,14 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 	ops.write_ = &WriteOp;
 	ops.seek_ = &SeekOp;
 	ops.close_ = &CloseOp;
-	
+
 	out = jas_stream_create_ops(&ops, callbacks);
 	if (!out)
 		return errOutOfMemory;
-	
+
 	try
 	{
-		for (i = 0; i < channelCount; i++)	
+		for (i = 0; i < channelCount; i++)
 		{
 			cmptparms[i].tlx = 0;
 			cmptparms[i].tly = 0;
@@ -361,7 +361,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 		image = jas_image_create(channelCount, cmptparms, JAS_CLRSPC_UNKNOWN);
 		if (!image)
 			throw((int)errOutOfMemory);
-	
+
 		if (channelCount >= 3)
 		{
 			jas_image_setclrspc(image, JAS_CLRSPC_SRGB);
@@ -379,7 +379,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 			jas_image_setclrspc(image, JAS_CLRSPC_SGRAY);
 			jas_image_setcmpttype(image, 0,	JAS_IMAGE_CT_COLOR(JAS_CLRSPC_CHANIND_GRAY_Y));
 		}
-		
+
 		for (i = 0; i < channelCount; i++)
 		{
 			cmpts[i] = jas_matrix_create(1, width);
@@ -390,7 +390,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 		}
 
 		BYTE* scan0 = reinterpret_cast<BYTE*>(inData);
-		
+
 		for (y = 0; y < height; y++)
 		{
 			BYTE* src = scan0 + (y * stride);
@@ -409,7 +409,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 				}
 				else
 				{
-					jas_matrix_setv(cmpts[0], x, src[0]); 
+					jas_matrix_setv(cmpts[0], x, src[0]);
 				}
 
 				src += 4;
@@ -425,16 +425,16 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 
 		}
 
-		ZeroMemory(&image->captureRes, sizeof(jas_image_resolution_t)); 
+		ZeroMemory(&image->captureRes, sizeof(jas_image_resolution_t));
 		if (params.dpcmX > 0.0 && params.dpcmY > 0.0)
 		{
 			const double dotsPerMeterX = params.dpcmX * 100.0;
-			const double dotsPerMeterY = params.dpcmY * 100.0; 
+			const double dotsPerMeterY = params.dpcmY * 100.0;
 
 			jas_image_resolution_t* res = &image->captureRes;
-			
+
 			uint_fast32_t vRes = static_cast<uint_fast32_t>(floor(dotsPerMeterY * 1000.0));
-			
+
 			res->vNumerator = vRes;
 			res->vDenomerator = 1000;
 			res->vExponent = 0;
@@ -444,10 +444,10 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 				res->vNumerator /= 10;
 				res->vExponent += 1;
 			}
-			
+
 
 			uint_fast32_t hRes = static_cast<uint_fast32_t>(floor(dotsPerMeterX * 1000.0));
-			
+
 			res->hNumerator = hRes;
 			res->hDenomerator = 1000;
 			res->hExponent = 0;
@@ -467,7 +467,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 		// JasPer uses lossless compression by default when the rate parameter is not specified.
 		if (params.quality < 100)
 		{
-			sprintf_s(encOps, sizeof(encOps), "rate=%.3f", static_cast<float>(params.quality) / 100.0f); 
+			sprintf_s(encOps, sizeof(encOps), "rate=%.3f", static_cast<float>(params.quality) / 100.0f);
 		}
 
 		if (jas_image_encode(image, out, outFmt, encOps))
