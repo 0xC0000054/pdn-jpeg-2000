@@ -330,7 +330,6 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 
 	int format = 0, error = errOk;
 
-
 	if (jas_init())
 		return errInitFailure;
 
@@ -444,7 +443,6 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 				res->vNumerator /= 10;
 				res->vExponent += 1;
 			}
-
 
 			uint_fast32_t hRes = static_cast<uint_fast32_t>(floor(dotsPerMeterX * 1000.0));
 

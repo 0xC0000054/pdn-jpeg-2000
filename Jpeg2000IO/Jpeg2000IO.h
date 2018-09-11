@@ -13,7 +13,6 @@
 #ifndef JPEG2000_H
 #define JPEG2000_H
 
-
 #ifdef JPEG2000IO_EXPORTS
 #define JPEG2000IO_API extern "C" __declspec(dllexport)
 #else
@@ -63,6 +62,5 @@ struct EncodeParams
 JPEG2000IO_API int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output);
 JPEG2000IO_API int __stdcall EncodeFile(void* inData, int width, int height, int stride, int channelCount, EncodeParams params, IOCallbacks* callbacks);
 JPEG2000IO_API void __stdcall FreeImageData(ImageData * image);
-
 
 #endif

@@ -43,7 +43,6 @@ namespace Jpeg2000Filetype
 
 		protected unsafe override Document OnLoad(Stream input)
 		{
-
 			FileIO.ImageData image;
 
 			FileIO.CodecError result = FileIO.DecodeFile(input, out image);
@@ -150,7 +149,6 @@ namespace Jpeg2000Filetype
 
 				throw new FormatException(error);
 			}
-
 		}
 
 		private enum PropertyNames
@@ -161,7 +159,6 @@ namespace Jpeg2000Filetype
 		public override PropertyCollection OnCreateSavePropertyCollection()
 		{
 			List<Property> props = new List<Property> { new Int32Property(PropertyNames.Quality, 95, 0, 100)};
-
 
 			return new PropertyCollection(props);
 		}
@@ -202,7 +199,6 @@ namespace Jpeg2000Filetype
 				}
 			}
 
-
 			if (uniqueColors.Count <= 256)
 			{
 				for (int y = 0; y < height; y++)
@@ -212,13 +208,11 @@ namespace Jpeg2000Filetype
 
 					while (srcPtr < endPtr)
 					{
-
 						if (!(srcPtr->B == srcPtr->G && srcPtr->G == srcPtr->R))
 						{
 							// The image is RGB.
 							return 3;
 						}
-
 
 						++srcPtr;
 					}
