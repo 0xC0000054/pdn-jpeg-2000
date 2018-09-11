@@ -168,7 +168,7 @@ namespace Jpeg2000Filetype
 
 		public override ControlInfo OnCreateSaveConfigUI(PropertyCollection props)
 		{
-			ControlInfo info = PropertyBasedFileType.CreateDefaultSaveConfigUI(props);
+			ControlInfo info = CreateDefaultSaveConfigUI(props);
 			info.SetPropertyControlValue(PropertyNames.Quality, ControlInfoPropertyNames.DisplayName, "Quality");
 
 			return info;
