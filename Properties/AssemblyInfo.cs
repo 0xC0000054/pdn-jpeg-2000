@@ -3,7 +3,7 @@
 // This file is part of pdn-jpeg-2000, a FileType plugin for Paint.NET
 // that loads and saves JPEG 2000 images.
 //
-// Copyright (c) 2012-2017 Nicholas Hayes
+// Copyright (c) 2012-2018 Nicholas Hayes
 //
 // This file is licensed under the MIT License.
 // See LICENSE.txt for complete licensing and attribution information.
@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("null54")]
 [assembly: AssemblyProduct("Jpeg2000Filetype")]
-[assembly: AssemblyCopyright("Copyright © 2012-2017 Nicholas Hayes (aka null54)")]
+[assembly: AssemblyCopyright("Copyright © 2012-2018 Nicholas Hayes (aka null54)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
