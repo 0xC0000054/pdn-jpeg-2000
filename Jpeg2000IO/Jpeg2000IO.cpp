@@ -270,7 +270,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 						jas_image_readcmpt(image, alphaIndex, 0, y, width, 1, bufs[1]);
 					}
 
-					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * width);
+					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * stride);
 					for (x = 0; x < width; x++){
 						data[0] = static_cast<BYTE>((jas_matrix_getv(bufs[0], x)>>shift));
 
@@ -279,7 +279,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 							data[1] = static_cast<BYTE>((jas_matrix_getv(bufs[1], x)>>shift));
 						}
 
-						data++;
+						data += bpp;
 					}
 				}
 
