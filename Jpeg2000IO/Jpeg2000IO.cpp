@@ -168,8 +168,6 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 			image = newimage;
 		}
 
-		output->channels = image->numcmpts_;
-
 		bufs = reinterpret_cast<jas_matrix_t**>(calloc(image->numcmpts_, sizeof(jas_matrix_t**)));
 		if (!bufs)
 		{
@@ -189,7 +187,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 			shift = depth - 8;
 		}
 
-		int outLen, stride, bpp, index0, index1, index2;
+		int outLen, stride, index0, index1, index2;
 
 		const int alphaIndex = jas_image_getcmptbytype(image, JAS_IMAGE_CT_OPACITY);
 
@@ -201,9 +199,9 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		{
 			case JAS_CLRSPC_FAM_RGB:
 
-				bpp = hasAlpha ? 4 : 3;
+				output->channels = hasAlpha ? 4 : 3;
 
-				stride = width * bpp;
+				stride = width * output->channels;
 				outLen = stride * height;
 				output->data = HeapAlloc(GetProcessHeap(), 0, outLen);
 
@@ -238,16 +236,16 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 							data[3] = static_cast<BYTE>((jas_matrix_getv(bufs[3], x)>>shift));
 						}
 
-						data += bpp;
+						data += output->channels;
 					}
 				}
 
 				break;
 			case JAS_CLRSPC_FAM_GRAY:
 
-				bpp = hasAlpha ? 2 : 1;
+				output->channels = hasAlpha ? 2 : 1;
 
-				stride = width * bpp;
+				stride = width * output->channels;
 				outLen = stride * height;
 				output->data = HeapAlloc(GetProcessHeap(), 0, outLen);
 
@@ -279,7 +277,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 							data[1] = static_cast<BYTE>((jas_matrix_getv(bufs[1], x)>>shift));
 						}
 
-						data += bpp;
+						data += output->channels;
 					}
 				}
 
