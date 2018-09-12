@@ -1,4 +1,16 @@
-﻿using System;
+﻿////////////////////////////////////////////////////////////////////////
+//
+// This file is part of pdn-jpeg-2000, a FileType plugin for Paint.NET
+// that loads and saves JPEG 2000 images.
+//
+// Copyright (c) 2012-2018 Nicholas Hayes
+//
+// This file is licensed under the MIT License.
+// See LICENSE.txt for complete licensing and attribution information.
+//
+////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Reflection;
 using PaintDotNet;
 
