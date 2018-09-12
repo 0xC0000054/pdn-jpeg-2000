@@ -174,9 +174,11 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 			throw((int)errOutOfMemory);
 		}
 
-		for (int i = 0; i < image->numcmpts_; ++i) {
+		for (int i = 0; i < image->numcmpts_; ++i)
+		{
 			bufs[i] = jas_matrix_create(1, width);
-			if (!bufs[i]) {
+			if (!bufs[i])
+			{
 				throw((int)errOutOfMemory);
 			}
 		}
@@ -226,7 +228,8 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 					}
 
 					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * stride);
-					for (x = 0; x < width; x++){
+					for (x = 0; x < width; x++)
+					{
 						data[0] = static_cast<BYTE>((jas_matrix_getv(bufs[0], x)>>shift));
 						data[1] = static_cast<BYTE>((jas_matrix_getv(bufs[1], x)>>shift));
 						data[2] = static_cast<BYTE>((jas_matrix_getv(bufs[2], x)>>shift));
@@ -269,7 +272,8 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 					}
 
 					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * stride);
-					for (x = 0; x < width; x++){
+					for (x = 0; x < width; x++)
+					{
 						data[0] = static_cast<BYTE>((jas_matrix_getv(bufs[0], x)>>shift));
 
 						if (hasAlpha)
@@ -292,7 +296,8 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		err = error;
 	}
 
-	if (bufs) {
+	if (bufs)
+	{
 		for (i = 0; i < image->numcmpts_; ++i){	if (bufs[i]) jas_matrix_destroy(bufs[i]);}
 		free(bufs);
 	}
