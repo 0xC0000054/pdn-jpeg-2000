@@ -14,6 +14,8 @@
 #include "Jpeg2000IO.h"
 #include "jasper\jasper.h"
 #include "jp2_cod.h"
+#include "scoped.h"
+#include <vector>
 
 namespace
 {
@@ -69,22 +71,20 @@ namespace
 int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 {
 	JasPerInit init;
-	jas_image_t* image = nullptr;
-	jas_matrix_t** bufs = nullptr;
-	int i, x, y;
+	int x, y;
 
 	int err = errOk;
 
 	if (!init)
 		return errInitFailure;
 
-	jas_stream_t* in = jas_stream_memopen(input, inLen);
+	ScopedJasPerStream in(jas_stream_memopen(input, inLen));
 	if (!in)
 		return errOutOfMemory;
 
 	try
 	{
-		int format = jas_image_getfmt(in);
+		int format = jas_image_getfmt(in.get());
 		if (format < 0)
 		{
 			throw((int)errUnknownFormat);
@@ -97,7 +97,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		}
 
 		/* Decode the image. */
-		image = (*info->ops.decode)(in, nullptr);
+		ScopedJasPerImage image((*info->ops.decode)(in.get(), nullptr));
 		if (!image)
 		{
 			throw((int)errDecodeFailure);
@@ -149,36 +149,33 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		// <LD> 01/Jan/2005: Always force conversion to sRGB. Seems to be required for many types of JPEG2000 file.
 		if (image->numcmpts_ >= 3 && depth <= 8 && image->clrspc_ != JAS_CLRSPC_SRGB && image->cmprof_ != nullptr)
 		{
-			jas_cmprof_t* outprof = jas_cmprof_createfromclrspc(JAS_CLRSPC_SRGB);
+			ScopedJasPerColorProfile outprof(jas_cmprof_createfromclrspc(JAS_CLRSPC_SRGB));
 			if (!outprof)
 			{
 				throw((int)errProfileCreation);
 			}
 
-			jas_image_t* newimage = jas_image_chclrspc(image, outprof, JAS_CMXFORM_INTENT_PER);
+			ScopedJasPerImage newimage(jas_image_chclrspc(image.get(), outprof.get(), JAS_CMXFORM_INTENT_PER));
 			if (!newimage)
 			{
-				jas_cmprof_destroy(outprof); // <LD> 01/Jan/2005: Destroy color profile on error.
 				throw((int)errProfileConversion);
 			}
-			jas_image_destroy(image);
-			jas_cmprof_destroy(outprof);
-			image = newimage;
+			image.swap(newimage);
 		}
 
-		bufs = reinterpret_cast<jas_matrix_t**>(calloc(image->numcmpts_, sizeof(jas_matrix_t**)));
-		if (!bufs)
-		{
-			throw((int)errOutOfMemory);
-		}
+		std::vector<ScopedJasPerMatrix> bufs;
+		bufs.reserve(image->numcmpts_);
 
 		for (int i = 0; i < image->numcmpts_; ++i)
 		{
-			bufs[i] = jas_matrix_create(1, width);
-			if (!bufs[i])
+			ScopedJasPerMatrix matrix(jas_matrix_create(1, width));
+			if (!matrix)
 			{
 				throw((int)errOutOfMemory);
 			}
+
+			// The vector will assume ownership of the matrix.
+			bufs.push_back(std::move(matrix));
 		}
 
 		int shift = 0;
@@ -189,7 +186,7 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 
 		int outLen, stride, index0, index1, index2;
 
-		const int alphaIndex = jas_image_getcmptbytype(image, JAS_IMAGE_CT_OPACITY);
+		const int alphaIndex = jas_image_getcmptbytype(image.get(), JAS_IMAGE_CT_OPACITY);
 
 		const bool hasAlpha = alphaIndex >= 0;
 
@@ -210,19 +207,19 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 					throw((int)errOutOfMemory);
 				}
 
-				index0 = jas_image_getcmptbytype(image, JAS_IMAGE_CT_RGB_R);
-				index1 = jas_image_getcmptbytype(image, JAS_IMAGE_CT_RGB_G);
-				index2 = jas_image_getcmptbytype(image, JAS_IMAGE_CT_RGB_B);
+				index0 = jas_image_getcmptbytype(image.get(), JAS_IMAGE_CT_RGB_R);
+				index1 = jas_image_getcmptbytype(image.get(), JAS_IMAGE_CT_RGB_G);
+				index2 = jas_image_getcmptbytype(image.get(), JAS_IMAGE_CT_RGB_B);
 
 				for (y = 0; y < height; y++)
 				{
-					jas_image_readcmpt(image, index0, 0, y, width, 1, bufs[0]);
-					jas_image_readcmpt(image, index1, 0, y, width, 1, bufs[1]);
-					jas_image_readcmpt(image, index2, 0, y, width, 1, bufs[2]);
+					jas_image_readcmpt(image.get(), index0, 0, y, width, 1, bufs[0].get());
+					jas_image_readcmpt(image.get(), index1, 0, y, width, 1, bufs[1].get());
+					jas_image_readcmpt(image.get(), index2, 0, y, width, 1, bufs[2].get());
 
 					if (hasAlpha)
 					{
-						jas_image_readcmpt(image, alphaIndex, 0, y, width, 1, bufs[3]);
+						jas_image_readcmpt(image.get(), alphaIndex, 0, y, width, 1, bufs[3].get());
 					}
 
 					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * stride);
@@ -259,14 +256,14 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 				height = jas_image_cmptheight(image, 0);
 				depth = jas_image_cmptprec(image, 0);
 
-				index0 = jas_image_getcmptbytype(image, JAS_IMAGE_CT_GRAY_Y);
+				index0 = jas_image_getcmptbytype(image.get(), JAS_IMAGE_CT_GRAY_Y);
 
 				for (y = 0; y < height; y++) {
-					jas_image_readcmpt(image, index0, 0, y, width, 1, bufs[0]);
+					jas_image_readcmpt(image.get(), index0, 0, y, width, 1, bufs[0].get());
 
 					if (hasAlpha)
 					{
-						jas_image_readcmpt(image, alphaIndex, 0, y, width, 1, bufs[1]);
+						jas_image_readcmpt(image.get(), alphaIndex, 0, y, width, 1, bufs[1].get());
 					}
 
 					BYTE* data = reinterpret_cast<BYTE*>(output->data) + (y * stride);
@@ -293,14 +290,10 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 	{
 		err = error;
 	}
-
-	if (bufs)
+	catch (std::bad_alloc&)
 	{
-		for (i = 0; i < image->numcmpts_; ++i){	if (bufs[i]) jas_matrix_destroy(bufs[i]);}
-		free(bufs);
+		err = errOutOfMemory;
 	}
-	if (image) jas_image_destroy(image);
-	if (in) jas_stream_close(in);
 
 	return err;
 }
@@ -323,9 +316,6 @@ void __stdcall FreeImageData(ImageData* image)
 int __stdcall EncodeFile(void* inData, int width, int height, int stride, int channelCount, EncodeParams params, IOCallbacks* callbacks)
 {
 	JasPerInit init;
-	jas_image_t* image = nullptr;
-	jas_stream_t* out = nullptr;
-	jas_matrix_t* cmpts[4] = { nullptr, nullptr, nullptr, nullptr };
 	jas_image_cmptparm_t cmptparms[4];
 	int i, x, y;
 
@@ -340,7 +330,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 	ops.seek_ = &SeekOp;
 	ops.close_ = &CloseOp;
 
-	out = jas_stream_create_ops(&ops, callbacks);
+	ScopedJasPerStream out(jas_stream_create_ops(&ops, callbacks));
 	if (!out)
 		return errOutOfMemory;
 
@@ -358,7 +348,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 			cmptparms[i].sgnd = false;
 		}
 
-		image = jas_image_create(channelCount, cmptparms, JAS_CLRSPC_UNKNOWN);
+		ScopedJasPerImage image(jas_image_create(channelCount, cmptparms, JAS_CLRSPC_UNKNOWN));
 		if (!image)
 			throw((int)errOutOfMemory);
 
@@ -380,13 +370,19 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 			jas_image_setcmpttype(image, 0,	JAS_IMAGE_CT_COLOR(JAS_CLRSPC_CHANIND_GRAY_Y));
 		}
 
+		std::vector<ScopedJasPerMatrix> cmpts;
+		cmpts.reserve(channelCount);
+
 		for (i = 0; i < channelCount; i++)
 		{
-			cmpts[i] = jas_matrix_create(1, width);
-			if (!cmpts[i])
+			ScopedJasPerMatrix matrix(jas_matrix_create(1, width));
+			if (!matrix)
 			{
 				throw((int)errOutOfMemory);
 			}
+
+			// The vector will assume ownership of the matrix.
+			cmpts.push_back(std::move(matrix));
 		}
 
 		BYTE* scan0 = reinterpret_cast<BYTE*>(inData);
@@ -417,7 +413,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 
 			for (i = 0; i < channelCount; i++)
 			{
-				if (jas_image_writecmpt(image, i, 0, y, width, 1, cmpts[i]))
+				if (jas_image_writecmpt(image.get(), i, 0, y, width, 1, cmpts[i].get()))
 				{
 					throw((int)errImageBufferWrite);
 				}
@@ -469,31 +465,21 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 			sprintf_s(encOps, sizeof(encOps), "rate=%.3f", static_cast<float>(params.quality) / 100.0f);
 		}
 
-		if (jas_image_encode(image, out, outFmt, encOps))
+		if (jas_image_encode(image.get(), out.get(), outFmt, encOps))
 		{
 			throw((int)errEncodeFailed);
 		}
 
-		jas_stream_flush(out);
+		jas_stream_flush(out.get());
 	}
 	catch (int errorCode)
 	{
 		error = errorCode;
 	}
-
-	for (i = 0; i < channelCount; i++)
+	catch (std::bad_alloc&)
 	{
-		if (cmpts[i])
-		{
-			jas_matrix_destroy(cmpts[i]);
-		}
+		error = errOutOfMemory;
 	}
-
-	if (image)
-		jas_image_destroy(image);
-
-	if (out)
-		jas_stream_close(out);
 
 	return error;
 }
