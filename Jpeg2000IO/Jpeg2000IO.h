@@ -59,7 +59,7 @@ struct EncodeParams
 #define errImageBufferWrite -7
 #define errEncodeFailed -8
 
-JPEG2000IO_API int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output);
+JPEG2000IO_API int __stdcall DecodeFile(IOCallbacks* callbacks, ImageData* output);
 JPEG2000IO_API int __stdcall EncodeFile(void* inData, int width, int height, int stride, int channelCount, EncodeParams params, IOCallbacks* callbacks);
 JPEG2000IO_API void __stdcall FreeImageData(ImageData * image);
 

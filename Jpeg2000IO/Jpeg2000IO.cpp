@@ -68,7 +68,7 @@ namespace
 	};
 }
 
-int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
+int __stdcall DecodeFile(IOCallbacks* callbacks, ImageData* output)
 {
 	JasPerInit init;
 	int x, y;
@@ -78,7 +78,13 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 	if (!init)
 		return errInitFailure;
 
-	ScopedJasPerStream in(jas_stream_memopen(input, inLen));
+	jas_stream_ops_t ops;
+	ops.read_ = &ReadOp;
+	ops.write_ = &WriteOp;
+	ops.seek_ = &SeekOp;
+	ops.close_ = &CloseOp;
+
+	ScopedJasPerStream in(jas_stream_create_ops(&ops, callbacks, "r"));
 	if (!in)
 		return errOutOfMemory;
 

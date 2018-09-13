@@ -77,7 +77,7 @@ namespace Jpeg2000Filetype
 		private static class IO_x86
 		{
 			[DllImport("Jpeg2000IO_x86.dll", CallingConvention = CallingConvention.StdCall)]
-			internal static extern CodecError DecodeFile(IntPtr input, int inLen, out ImageData output);
+			internal static extern CodecError DecodeFile(IOCallbacks callbacks, out ImageData output);
 
 			[DllImport("Jpeg2000IO_x86.dll", CallingConvention = CallingConvention.StdCall)]
 			internal static extern CodecError EncodeFile(
@@ -97,7 +97,7 @@ namespace Jpeg2000Filetype
 		private static class IO_x64
 		{
 			[DllImport("Jpeg2000IO_x64.dll", CallingConvention = CallingConvention.StdCall)]
-			internal static extern CodecError DecodeFile(IntPtr input, int inLen, out ImageData output);
+			internal static extern CodecError DecodeFile(IOCallbacks callbacks, out ImageData output);
 
 			[DllImport("Jpeg2000IO_x64.dll", CallingConvention = CallingConvention.StdCall)]
 			internal static extern CodecError EncodeFile(
@@ -115,21 +115,28 @@ namespace Jpeg2000Filetype
 
 		public static unsafe CodecError DecodeFile(Stream input, out ImageData output)
 		{
-			int length = (int)input.Length;
-			byte[] bytes = new byte[length];
-			PaintDotNet.IO.StreamExtensions.ProperRead(input, bytes, 0, length);
-
-			fixed (byte* pInput = bytes)
+			StreamIOCallbacks streamCallbacks = new StreamIOCallbacks(input);
+			IOCallbacks callbacks = new IOCallbacks()
 			{
-				if (IntPtr.Size == 8)
-				{
-					return IO_x64.DecodeFile((IntPtr)pInput, length, out output);
-				}
-				else
-				{
-					return IO_x86.DecodeFile((IntPtr)pInput, length, out output);
-				}
+				Read = new ReadDelegate(streamCallbacks.Read),
+				Write = new WriteDelegate(streamCallbacks.Write),
+				Seek = new SeekDelegate(streamCallbacks.Seek)
+			};
+
+			CodecError result;
+			if (IntPtr.Size == 8)
+			{
+				result = IO_x64.DecodeFile(callbacks, out output);
 			}
+			else
+			{
+				result = IO_x86.DecodeFile(callbacks, out output);
+			}
+
+			GC.KeepAlive(callbacks);
+			GC.KeepAlive(streamCallbacks);
+
+			return result;
 		}
 
 		public static void FreeImageData(ref ImageData data)
