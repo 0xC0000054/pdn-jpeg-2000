@@ -42,17 +42,40 @@ namespace
 	{
 		return 0;
 	}
+
+	class JasPerInit
+	{
+	public:
+		JasPerInit() : initialized(jas_init() == 0)
+		{
+		}
+		~JasPerInit()
+		{
+			if (initialized)
+			{
+				jas_cleanup();
+			}
+		}
+		operator bool() const
+		{
+			return initialized;
+		}
+
+	private:
+		bool initialized;
+	};
 }
 
 int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 {
+	JasPerInit init;
 	jas_image_t* image = nullptr;
 	jas_matrix_t** bufs = nullptr;
 	int i, x, y;
 
 	int err = errOk;
 
-	if (jas_init())
+	if (!init)
 		return errInitFailure;
 
 	jas_stream_t* in = jas_stream_memopen(input, inLen);
@@ -276,7 +299,6 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 		for (i = 0; i < image->numcmpts_; ++i){	if (bufs[i]) jas_matrix_destroy(bufs[i]);}
 		free(bufs);
 	}
-	jas_cleanup();
 	if (image) jas_image_destroy(image);
 	if (in) jas_stream_close(in);
 
@@ -300,6 +322,7 @@ void __stdcall FreeImageData(ImageData* image)
 
 int __stdcall EncodeFile(void* inData, int width, int height, int stride, int channelCount, EncodeParams params, IOCallbacks* callbacks)
 {
+	JasPerInit init;
 	jas_image_t* image = nullptr;
 	jas_stream_t* out = nullptr;
 	jas_matrix_t* cmpts[4] = { nullptr, nullptr, nullptr, nullptr };
@@ -308,7 +331,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 
 	int format = 0, error = errOk;
 
-	if (jas_init())
+	if (!init)
 		return errInitFailure;
 
 	jas_stream_ops_t ops;
