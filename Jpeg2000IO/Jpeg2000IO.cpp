@@ -82,46 +82,21 @@ int __stdcall DecodeFile(unsigned char *input, int inLen, ImageData* output)
 
 		output->dpcmX = output->dpcmY = 0.0;
 
-		if (strcmp(info->name, "jp2") == 0)
+		if (image->captureRes.hNumerator > 0 &&
+			image->captureRes.vNumerator > 0 &&
+			image->captureRes.hDenomerator > 0 &&
+			image->captureRes.vDenomerator > 0 &&
+			image->captureRes.hExponent >= 0 &&
+			image->captureRes.vExponent >= 0)
 		{
-			jas_stream_rewind(in);
-			bool done = false;
+			const jas_image_resolution_t* resc = &image->captureRes;
 
-			jp2_box_t *box = nullptr;
+			double hres = (static_cast<double>(resc->hNumerator) / static_cast<double>(resc->hDenomerator)) * pow(10.0, static_cast<double>(resc->hExponent));
+			double vres = (static_cast<double>(resc->vNumerator) / static_cast<double>(resc->vDenomerator)) * pow(10.0, static_cast<double>(resc->vExponent));
 
-			while(box = jp2_box_get(in))
-			{
-				switch(box->type)
-				{
-				case JP2_BOX_RESC:
-					if (box->data.resc.VRcE >= 0 && box->data.resc.HRcE >= 0) // pow does not work with negative exponents.
-					{
-						jp2_resc_t* resc = &box->data.resc;
-
-						double hres = (static_cast<double>(resc->HRcN) / static_cast<double>(resc->HRcD)) * pow(10.0, static_cast<double>(resc->HRcE));
-						double vres = (static_cast<double>(resc->VRcN) / static_cast<double>(resc->VRcD)) * pow(10.0, static_cast<double>(resc->VRcE));
-
-						// convert pixels per meter to pixels per centimeter
-						output->dpcmX = hres / 100.0;
-						output->dpcmY = vres / 100.0;
-					}
-					break;
-				case JP2_BOX_JP2C:
-					done = true;
-					break;
-				}
-
-				if (box)
-				{
-					jp2_box_destroy(box);
-					box = nullptr;
-				}
-
-				if (done)
-				{
-					break;
-				}
-			}
+			// convert pixels per meter to pixels per centimeter
+			output->dpcmX = hres / 100.0;
+			output->dpcmY = vres / 100.0;
 		}
 
 		/* Create a color profile if needed. */

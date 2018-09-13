@@ -76,6 +76,7 @@ typedef struct {
 	jp2_box_t *bpcc;
 	jp2_box_t *cmap;
 	jp2_box_t *colr;
+	jp2_box_t *resc;
 	jas_image_t *image;
 	uint_fast16_t numchans;
 	uint_fast16_t *chantocmptlut;

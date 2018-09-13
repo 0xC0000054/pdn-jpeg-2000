@@ -197,6 +197,12 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 				box = 0;
 			}
 			break;
+		case JP2_BOX_RESC:
+			if (!dec->resc) {
+				dec->resc = box;
+				box = 0;
+			}
+			break;
 		}
 		if (box) {
 			jp2_box_destroy(box);
@@ -419,6 +425,22 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 jas_eprintf("no of components is %d\n", jas_image_numcmpts(dec->image));
 #endif
 
+	if (dec->resc) {
+		dec->image->captureRes.hNumerator = dec->resc->data.resc.HRcN;
+		dec->image->captureRes.hDenomerator = dec->resc->data.resc.HRcD;
+		dec->image->captureRes.hExponent = dec->resc->data.resc.HRcE;
+		dec->image->captureRes.vNumerator = dec->resc->data.resc.VRcN;
+		dec->image->captureRes.vDenomerator = dec->resc->data.resc.VRcD;
+		dec->image->captureRes.vExponent = dec->resc->data.resc.VRcE;
+	} else {
+		dec->image->captureRes.hNumerator = 0;
+		dec->image->captureRes.hDenomerator = 0;
+		dec->image->captureRes.hExponent = 0;
+		dec->image->captureRes.vNumerator = 0;
+		dec->image->captureRes.vDenomerator = 0;
+		dec->image->captureRes.vExponent = 0;
+	}
+
 	/* Prevent the image from being destroyed later. */
 	image = dec->image;
 	dec->image = 0;
@@ -493,6 +515,7 @@ static jp2_dec_t *jp2_dec_create(void)
 	dec->chantocmptlut = 0;
 	dec->cmap = 0;
 	dec->colr = 0;
+	dec->resc = 0;
 	return dec;
 }
 
@@ -518,6 +541,9 @@ static void jp2_dec_destroy(jp2_dec_t *dec)
 	}
 	if (dec->colr) {
 		jp2_box_destroy(dec->colr);
+	}
+	if (dec->resc) {
+		jp2_box_destroy(dec->resc);
 	}
 	if (dec->chantocmptlut) {
 		jas_free(dec->chantocmptlut);
