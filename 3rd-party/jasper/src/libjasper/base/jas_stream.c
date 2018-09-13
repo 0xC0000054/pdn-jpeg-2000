@@ -168,7 +168,7 @@ static jas_stream_t *jas_stream_create()
 	return stream;
 }
 
-jas_stream_t *jas_stream_create_ops(jas_stream_ops_t* ops, jas_stream_obj_t* obj)
+jas_stream_t *jas_stream_create_ops(jas_stream_ops_t* ops, jas_stream_obj_t* obj, const char* mode)
 {
 	jas_stream_t *stream;
 
@@ -176,7 +176,7 @@ jas_stream_t *jas_stream_create_ops(jas_stream_ops_t* ops, jas_stream_obj_t* obj
 		return 0;
 	}
 
-	stream->openmode_ = JAS_STREAM_READ | JAS_STREAM_WRITE | JAS_STREAM_BINARY;
+	stream->openmode_ = jas_strtoopenmode(mode) | JAS_STREAM_BINARY;
 	
 	jas_stream_initbuf(stream, JAS_STREAM_FULLBUF, 0, 0);
 

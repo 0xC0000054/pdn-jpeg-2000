@@ -330,7 +330,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 	ops.seek_ = &SeekOp;
 	ops.close_ = &CloseOp;
 
-	ScopedJasPerStream out(jas_stream_create_ops(&ops, callbacks));
+	ScopedJasPerStream out(jas_stream_create_ops(&ops, callbacks, "w"));
 	if (!out)
 		return errOutOfMemory;
 

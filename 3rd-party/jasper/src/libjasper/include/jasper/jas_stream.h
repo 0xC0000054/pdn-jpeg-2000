@@ -288,7 +288,7 @@ typedef struct {
 \******************************************************************************/
 
 /* Opens a stream with user-defined operation callbacks. */
-jas_stream_t *jas_stream_create_ops(jas_stream_ops_t* ops, jas_stream_obj_t* obj);
+jas_stream_t *jas_stream_create_ops(jas_stream_ops_t* ops, jas_stream_obj_t* obj, const char* mode);
 
 /* Open a file as a stream. */
 jas_stream_t *jas_stream_fopen(const wchar_t *filename, const char *mode);
