@@ -197,7 +197,7 @@ namespace Jpeg2000Filetype
 
 		private sealed class StreamIOCallbacks
 		{
-			private Stream stream;
+			private readonly Stream stream;
 
 			public StreamIOCallbacks(Stream stream)
 			{
