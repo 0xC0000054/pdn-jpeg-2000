@@ -76,7 +76,9 @@ int __stdcall DecodeFile(IOCallbacks* callbacks, ImageData* output)
 	int err = errOk;
 
 	if (!init)
+	{
 		return errInitFailure;
+	}
 
 	jas_stream_ops_t ops;
 	ops.read_ = &ReadOp;
@@ -86,7 +88,9 @@ int __stdcall DecodeFile(IOCallbacks* callbacks, ImageData* output)
 
 	ScopedJasPerStream in(jas_stream_create_ops(&ops, callbacks, "r"));
 	if (!in)
+	{
 		return errOutOfMemory;
+	}
 
 	try
 	{
@@ -338,7 +342,9 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 
 	ScopedJasPerStream out(jas_stream_create_ops(&ops, callbacks, "w"));
 	if (!out)
+	{
 		return errOutOfMemory;
+	}
 
 	try
 	{
@@ -356,7 +362,9 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 
 		ScopedJasPerImage image(jas_image_create(channelCount, cmptparms, JAS_CLRSPC_UNKNOWN));
 		if (!image)
+		{
 			throw((int)errOutOfMemory);
+		}
 
 		if (channelCount >= 3)
 		{
