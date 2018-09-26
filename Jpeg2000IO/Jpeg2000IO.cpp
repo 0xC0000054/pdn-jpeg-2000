@@ -476,7 +476,7 @@ int __stdcall EncodeFile(void* inData, int width, int height, int stride, int ch
 		// JasPer uses lossless compression by default when the rate parameter is not specified.
 		if (params.quality < 100)
 		{
-			sprintf_s(encOps, sizeof(encOps), "rate=%.3f", static_cast<float>(params.quality) / 100.0f);
+			sprintf_s(encOps, sizeof(encOps), "rate=%.9f", 100.0f / pow(static_cast<float>(115 - params.quality), 2.0f));
 		}
 
 		if (jas_image_encode(image.get(), out.get(), outFmt, encOps))
