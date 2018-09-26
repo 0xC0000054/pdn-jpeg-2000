@@ -158,7 +158,7 @@ namespace Jpeg2000Filetype
 
 		public override PropertyCollection OnCreateSavePropertyCollection()
 		{
-			List<Property> props = new List<Property> { new Int32Property(PropertyNames.Quality, 95, 0, 100)};
+			List<Property> props = new List<Property> { new Int32Property(PropertyNames.Quality, 85, 0, 100)};
 
 			return new PropertyCollection(props);
 		}
