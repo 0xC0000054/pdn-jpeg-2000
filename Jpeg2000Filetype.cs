@@ -173,8 +173,6 @@ namespace Jpeg2000Filetype
 
 		private static unsafe int CountChannels(Surface scratchSurface)
 		{
-			HashSet<ColorBgra> uniqueColors = new HashSet<ColorBgra>();
-
 			int width = scratchSurface.Width;
 			int height = scratchSurface.Height;
 
@@ -190,38 +188,18 @@ namespace Jpeg2000Filetype
 						return 4;
 					}
 
-					if (!uniqueColors.Contains(*srcPtr) && uniqueColors.Count < 300)
+					if (!(srcPtr->B == srcPtr->G && srcPtr->G == srcPtr->R))
 					{
-						uniqueColors.Add(*srcPtr);
+						// The image is RGB.
+						return 3;
 					}
 
 					++srcPtr;
 				}
 			}
 
-			if (uniqueColors.Count <= 256)
-			{
-				for (int y = 0; y < height; y++)
-				{
-					ColorBgra* srcPtr = scratchSurface.GetRowAddress(y);
-					ColorBgra* endPtr = srcPtr + width;
-
-					while (srcPtr < endPtr)
-					{
-						if (!(srcPtr->B == srcPtr->G && srcPtr->G == srcPtr->R))
-						{
-							// The image is RGB.
-							return 3;
-						}
-
-						++srcPtr;
-					}
-				}
-
-				return 1;
-			}
-
-			return 3;
+			// The image is gray scale
+			return 1;
 		}
 
 		protected override void OnSaveT(Document input, Stream output, PropertyBasedSaveConfigToken token, Surface scratchSurface, ProgressEventHandler progressCallback)
